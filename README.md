@@ -1,2 +1,9 @@
-# indie-ideate
-axentx product · An AI-powered ideation tool that helps indie hackers and creators generate and validate software tool ideas, enabling them to build and monetize niche tools efficiently.
+# Idea Validator
+A tool to validate ideas using market trends and user feedback.
+
+## Usage
+1. Create an instance of the `Idea` class with the idea's name, description, market trend, and user feedback.
+2. Call the `validate_idea` function to get a report outlining the idea's potential and suggested improvements.
+3. Use the `generate_report` function to generate a JSON-formatted report.
+
+## Example
