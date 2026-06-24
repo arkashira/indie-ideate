@@ -1,10 +1,11 @@
-# Indie Ideate
-Indie Ideate is a dashboard for tracking and managing validated ideas.
+# Validation Engine
+Validation engine for ideas. Analyzes search volume and keyword trends for each idea.
 
-## Features
-* Lists ideas with validation score, competitor count, and monetization template
-* Each idea links to a detailed view
-* Dashboard updates in real time via websockets
+## Usage
+1. Create an instance of the `ValidationEngine` class.
+2. Create an `Idea` object with a keyword.
+3. Call the `get_demand_score` method to get the demand score.
+4. Call the `get_trend_graph_data` method to get the trend graph data.
 
-## Running the Tests
-To run the tests, use the following command:
+## Testing
+Run the tests using `pytest`.
