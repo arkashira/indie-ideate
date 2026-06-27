@@ -1,55 +1,74 @@
-import pytest
 from onboarding import OnboardingWizard, User
+import json
 
-def test_start_onboarding():
+def test_profile_setup():
     wizard = OnboardingWizard()
-    wizard.start_onboarding("user1")
-    assert "user1" in wizard.user_profile
+    wizard.profile_setup("John Doe", "john@example.com")
+    assert wizard.user.profile == {"name": "John Doe", "email": "john@example.com"}
 
-def test_input_skills():
+def test_interest_input():
     wizard = OnboardingWizard()
-    wizard.start_onboarding("user1")
-    wizard.input_skills("user1", ["skill1", "skill2"])
-    assert wizard.user_profile["user1"].skills == ["skill1", "skill2"]
+    wizard.profile_setup("John Doe", "john@example.com")
+    wizard.interest_input(["Reading", "Hiking"])
+    assert wizard.user.interests == ["Reading", "Hiking"]
 
-def test_generate_ideas():
+def test_first_idea_generation():
     wizard = OnboardingWizard()
-    wizard.start_onboarding("user1")
-    wizard.input_skills("user1", ["skill1", "skill2"])
-    ideas = wizard.generate_ideas("user1")
-    assert ideas == ["Idea 0 for skill1", "Idea 1 for skill2"]
+    wizard.profile_setup("John Doe", "john@example.com")
+    wizard.interest_input(["Reading", "Hiking"])
+    wizard.first_idea_generation()
+    assert wizard.user.ideas == ["Idea 1", "Idea 2", "Idea 3"]
 
-def test_validate_ideas():
+def test_get_progress():
     wizard = OnboardingWizard()
-    wizard.start_onboarding("user1")
-    wizard.input_skills("user1", ["skill1", "skill2"])
-    wizard.generate_ideas("user1")
-    validation_overview = wizard.validate_ideas("user1")
-    assert validation_overview == "Validation overview for Idea 0 for skill1, Idea 1 for skill2"
+    assert wizard.get_progress() == 0
+    wizard.profile_setup("John Doe", "john@example.com")
+    assert wizard.get_progress() == 1/3
+    wizard.interest_input(["Reading", "Hiking"])
+    assert wizard.get_progress() == 2/3
+    wizard.first_idea_generation()
+    assert wizard.get_progress() == 1
 
-def test_select_template():
+def test_skip_step():
     wizard = OnboardingWizard()
-    wizard.start_onboarding("user1")
-    wizard.select_template("user1", "template1")
-    assert wizard.user_profile["user1"].template == "template1"
+    wizard.skip_step()
+    assert wizard.current_step == 1
 
-def test_get_user_profile():
+def test_edit_inputs():
     wizard = OnboardingWizard()
-    wizard.start_onboarding("user1")
-    wizard.input_skills("user1", ["skill1", "skill2"])
-    wizard.generate_ideas("user1")
-    wizard.validate_ideas("user1")
-    wizard.select_template("user1", "template1")
-    user_profile = wizard.get_user_profile("user1")
-    assert user_profile == {
-        "skills": ["skill1", "skill2"],
-        "ideas": ["Idea 0 for skill1", "Idea 1 for skill2"],
-        "validation_overview": "Validation overview for Idea 0 for skill1, Idea 1 for skill2",
-        "template": "template1"
-    }
+    wizard.profile_setup("John Doe", "john@example.com")
+    wizard.edit_inputs(profile={"name": "Jane Doe", "email": "jane@example.com"})
+    assert wizard.user.profile == {"name": "Jane Doe", "email": "jane@example.com"}
 
-def test_skip_onboarding():
+def test_submit():
     wizard = OnboardingWizard()
-    wizard.start_onboarding("user1")
-    wizard.skip_onboarding("user1")
-    assert "user1" not in wizard.user_profile
+    wizard.profile_setup("John Doe", "john@example.com")
+    wizard.interest_input(["Reading", "Hiking"])
+    wizard.first_idea_generation()
+    user = wizard.submit()
+    assert user.profile == {"name": "John Doe", "email": "john@example.com"}
+    assert user.interests == ["Reading", "Hiking"]
+    assert user.ideas == ["Idea 1", "Idea 2", "Idea 3"]
+
+def test_save_onboarding_state():
+    wizard = OnboardingWizard()
+    wizard.profile_setup("John Doe", "john@example.com")
+    wizard.interest_input(["Reading", "Hiking"])
+    wizard.first_idea_generation()
+    wizard.save_onboarding_state()
+    with open("onboarding_state.json", "r") as f:
+        state = json.load(f)
+        assert state["profile"] == {"name": "John Doe", "email": "john@example.com"}
+        assert state["interests"] == ["Reading", "Hiking"]
+        assert state["ideas"] == ["Idea 1", "Idea 2", "Idea 3"]
+
+def test_load_onboarding_state():
+    wizard = OnboardingWizard()
+    wizard.profile_setup("John Doe", "john@example.com")
+    wizard.interest_input(["Reading", "Hiking"])
+    wizard.first_idea_generation()
+    wizard.save_onboarding_state()
+    wizard.load_onboarding_state()
+    assert wizard.user.profile == {"name": "John Doe", "email": "john@example.com"}
+    assert wizard.user.interests == ["Reading", "Hiking"]
+    assert wizard.user.ideas == ["Idea 1", "Idea 2", "Idea 3"]

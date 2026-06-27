@@ -1,46 +1,57 @@
 import json
 from dataclasses import dataclass
-from typing import Dict, List
+from typing import Dict
 
 @dataclass
 class User:
-    skills: List[str]
-    ideas: List[str]
-    validation_overview: str
-    template: str
+    profile: Dict[str, str]
+    interests: list
+    ideas: list
 
 class OnboardingWizard:
     def __init__(self):
-        self.user_profile = {}
+        self.steps = ["profile_setup", "interest_input", "first_idea_generation"]
+        self.current_step = 0
+        self.user = User({}, [], [])
 
-    def start_onboarding(self, user_id: str) -> None:
-        self.user_profile[user_id] = User([], [], "", "")
+    def profile_setup(self, name: str, email: str):
+        self.user.profile = {"name": name, "email": email}
+        self.current_step += 1
 
-    def input_skills(self, user_id: str, skills: List[str]) -> None:
-        self.user_profile[user_id].skills = skills
+    def interest_input(self, interests: list):
+        self.user.interests = interests
+        self.current_step += 1
 
-    def generate_ideas(self, user_id: str) -> List[str]:
-        # Simple idea generation based on skills
-        ideas = [f"Idea {i} for {skill}" for i, skill in enumerate(self.user_profile[user_id].skills)]
-        self.user_profile[user_id].ideas = ideas
-        return ideas
+    def first_idea_generation(self):
+        self.user.ideas = ["Idea 1", "Idea 2", "Idea 3"]
+        self.current_step += 1
 
-    def validate_ideas(self, user_id: str) -> str:
-        # Simple validation overview based on ideas
-        validation_overview = "Validation overview for " + ", ".join(self.user_profile[user_id].ideas)
-        self.user_profile[user_id].validation_overview = validation_overview
-        return validation_overview
+    def get_progress(self):
+        return self.current_step / len(self.steps)
 
-    def select_template(self, user_id: str, template: str) -> None:
-        self.user_profile[user_id].template = template
+    def skip_step(self):
+        if self.current_step < len(self.steps):
+            self.current_step += 1
 
-    def get_user_profile(self, user_id: str) -> Dict:
-        return {
-            "skills": self.user_profile[user_id].skills,
-            "ideas": self.user_profile[user_id].ideas,
-            "validation_overview": self.user_profile[user_id].validation_overview,
-            "template": self.user_profile[user_id].template
-        }
+    def edit_inputs(self, profile: Dict[str, str] = None, interests: list = None):
+        if profile:
+            self.user.profile = profile
+        if interests:
+            self.user.interests = interests
 
-    def skip_onboarding(self, user_id: str) -> None:
-        del self.user_profile[user_id]
+    def submit(self):
+        return self.user
+
+    def save_onboarding_state(self):
+        with open("onboarding_state.json", "w") as f:
+            json.dump({"profile": self.user.profile, "interests": self.user.interests, "ideas": self.user.ideas}, f)
+
+    def load_onboarding_state(self):
+        try:
+            with open("onboarding_state.json", "r") as f:
+                state = json.load(f)
+                self.user.profile = state["profile"]
+                self.user.interests = state["interests"]
+                self.user.ideas = state["ideas"]
+        except FileNotFoundError:
+            pass
